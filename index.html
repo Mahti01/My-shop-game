@@ -18,6 +18,9 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 .build{display:flex;gap:7px;flex-wrap:wrap;max-width:min(720px,calc(100vw - 300px))}
 .build button{border:1px solid #d8dcde;background:#f5f6f6;border-radius:11px;padding:9px 11px;color:#2e3337;font-weight:600;white-space:nowrap}
 .hint{margin-left:auto;max-width:430px;line-height:1.35}
+.panelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.panelClose{width:32px;height:32px;border:1px solid #d6dadd;background:#f5f6f6;border-radius:10px;font-size:22px;line-height:1;color:#30353a;cursor:pointer}
+.panelClose:hover{background:#eceeef}
 .toast{position:fixed;top:82px;left:50%;transform:translate(-50%,-10px);opacity:0;background:#24292d;color:#fff;padding:10px 15px;border-radius:12px;z-index:20;transition:.2s}.toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:700px){
   .hud{top:8px;left:8px;right:8px;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
@@ -35,9 +38,13 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 @media(max-width:430px){
   .controls{grid-template-columns:repeat(4,minmax(0,1fr));bottom:82px}
   .controls .btn{font-size:10px;padding:8px 3px}
-  .controls .btn:nth-child(5),.controls .btn:nth-child(6),.controls .btn:nth-child(7){font-size:0}
-  .controls .btn:nth-child(5)::after{content:'Товары';font-size:10px}
-  .controls .btn:nth-child(6)::after{content:'Заказы';font-size:10px}
+  .controls .btn:nth-child(4){font-size:0}
+  .controls .btn:nth-child(4)::after{content:'Ассортимент';font-size:10px}
+  .controls .btn:nth-child(5){font-size:0}
+  .controls .btn:nth-child(5)::after{content:'Закупки';font-size:10px}
+  .controls .btn:nth-child(6){font-size:0}
+  .controls .btn:nth-child(6)::after{content:'Статистика';font-size:10px}
+  .controls .btn:nth-child(7){font-size:0}
   .controls .btn:nth-child(7)::after{content:'Сброс';font-size:10px}
 }
 </style>
@@ -60,8 +67,8 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <button class="btn" id="stats" title="Статистика продаж">📊 Статистика</button>
 <button class="btn" id="reset" title="Начать заново">↻</button>
 </div>
-<div id="statsPanel" style="display:none;position:fixed;left:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div style="font-weight:800;font-size:16px;margin-bottom:10px">📊 Статистика магазина</div><div id="statsList"></div></div><div id="ordersPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div style="font-weight:800;font-size:16px;margin-bottom:6px">🚚 Закупки у поставщиков</div><div id="orderList"></div></div><div id="inventoryPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
-<div style="font-weight:800;font-size:16px;margin-bottom:10px">Ассортимент</div>
+<div id="statsPanel" class="modalPanel" style="display:none;position:fixed;left:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">📊 Статистика магазина</div><button class="panelClose" data-close="statsPanel">×</button></div><div id="statsList"></div></div><div id="ordersPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">🚚 Закупки у поставщиков</div><button class="panelClose" data-close="ordersPanel">×</button></div><div id="orderList"></div></div><div id="inventoryPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
+<div class="panelHead"><div style="font-weight:800;font-size:16px">📦 Ассортимент</div><button class="panelClose" data-close="inventoryPanel">×</button></div>
 <div id="productList"></div>
 </div>
 <div class="bottom">
@@ -69,7 +76,7 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <button data-build="shelf">＋ Стеллаж · 2 000 ₽</button>
 <button data-build="cash">＋ Касса · 6 000 ₽</button>
 <button data-build="decor">＋ Декор · 800 ₽</button>
-<button data-build="stock">📦 Закупки</button>
+
 </div>
 <div class="panel hint">Покупатели идут за конкретным товаром. 🚚 Закажите нужный товар у поставщика — поставка придёт через несколько игровых минут. Камера: drag / колесо / pinch.</div>
 </div>
@@ -279,7 +286,14 @@ renderProducts();
 document.getElementById('pause').onclick=()=>{S.running=!S.running;document.getElementById('pause').textContent=S.running?'Ⅱ':'▶';toast(S.running?'Магазин открыт':'Пауза')};
 document.getElementById('speed1').onclick=()=>{S.speed=1;S.running=true;document.getElementById('speed1').classList.add('active');document.getElementById('speed3').classList.remove('active')};
 document.getElementById('speed3').onclick=()=>{S.speed=3;S.running=true;document.getElementById('speed3').classList.add('active');document.getElementById('speed1').classList.remove('active')};
-document.getElementById('inventory').onclick=()=>{inventoryPanel.style.display=inventoryPanel.style.display==='none'?'block':'none';renderProducts()}; const ordersPanel=document.getElementById('ordersPanel'); document.getElementById('orders').onclick=()=>{ordersPanel.style.display=ordersPanel.style.display==='none'?'block':'none';renderOrders()}; const statsPanel=document.getElementById('statsPanel'); document.getElementById('stats').onclick=()=>{statsPanel.style.display=statsPanel.style.display==='none'?'block':'none';renderStats()}; renderOrders(); renderStats();
+const panels={inventory:inventoryPanel,orders:document.getElementById('ordersPanel'),stats:document.getElementById('statsPanel')};
+function closePanels(){Object.values(panels).forEach(p=>p.style.display='none')}
+function openPanel(name){const p=panels[name];if(!p)return;const wasOpen=p.style.display!=='none';closePanels();if(!wasOpen)p.style.display='block'}
+document.getElementById('inventory').onclick=()=>{openPanel('inventory');renderProducts()};
+document.getElementById('orders').onclick=()=>{openPanel('orders');renderOrders()};
+document.getElementById('stats').onclick=()=>{openPanel('stats');renderStats()};
+document.querySelectorAll('.panelClose').forEach(b=>b.onclick=()=>{document.getElementById(b.dataset.close).style.display='none'});
+renderOrders(); renderStats();
 document.getElementById('reset').onclick=()=>location.reload();
 
 document.querySelectorAll('[data-build]').forEach(btn=>btn.onclick=()=>{
