@@ -10,13 +10,12 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 .hud{position:fixed;top:12px;left:14px;right:14px;display:flex;align-items:center;gap:8px;z-index:10;pointer-events:none}
 .card,.panel{background:rgba(255,255,255,.94);border:1px solid #d9dddf;border-radius:14px;box-shadow:0 6px 24px rgba(30,40,45,.09);padding:9px 12px;font-size:12px;color:#6a7075;backdrop-filter:blur(10px)}
 .card b{font-size:14px;color:#202428}.grow{flex:1}
-.controls{position:fixed;right:14px;top:62px;display:flex;align-items:center;gap:6px;padding:7px;background:rgba(255,255,255,.9);border:1px solid #d9dddf;border-radius:18px;box-shadow:0 10px 34px rgba(30,40,45,.14);backdrop-filter:blur(12px);z-index:12}
-.controlGroup{display:flex;align-items:center;gap:5px}.speedGroup{display:flex;gap:3px;padding:3px;background:#eef0f1;border-radius:11px}
-.controlDivider{width:1px;height:28px;background:#dfe2e3;margin:0 2px}
-.btn{border:1px solid #d6dadd;background:#fff;border-radius:11px;padding:9px 11px;font-weight:700;color:#30353a;box-shadow:0 3px 12px rgba(30,40,45,.06);white-space:nowrap;cursor:pointer}
-.btn.active{background:#252a2e;color:#fff;border-color:#252a2e}.mainAction{padding:9px 14px}.mainAction span{font-size:11px}
-.toolBtn{display:flex;align-items:center;gap:6px}.toolBtn .icon{font-size:15px}.toolBtn .label{font-size:11px}
-.resetBtn{width:38px;padding:9px 0;font-size:17px}
+.controls{position:fixed;right:14px;top:62px;width:274px;display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px;background:rgba(255,255,255,.92);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 10px 34px rgba(30,40,45,.14);backdrop-filter:blur(12px);z-index:12}
+.controlGroup{display:contents}.speedGroup{display:contents}.controlDivider{display:none}
+.btn{border:1px solid #d6dadd;background:#fff;border-radius:11px;padding:10px 10px;font-weight:700;color:#30353a;box-shadow:0 3px 12px rgba(30,40,45,.06);white-space:nowrap;cursor:pointer;min-height:40px}
+.btn.active{background:#252a2e;color:#fff;border-color:#252a2e}.mainAction{padding:10px 10px}.mainAction span{font-size:11px}
+.toolBtn{display:flex;align-items:center;justify-content:center;gap:6px}.toolBtn .icon{font-size:15px}.toolBtn .label{font-size:11px}
+.resetBtn{width:auto;padding:10px;font-size:17px}
 .btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
 .bottom{position:fixed;left:14px;right:14px;bottom:14px;display:flex;align-items:flex-end;gap:9px;z-index:12}
 .build{display:flex;gap:7px;flex-wrap:wrap;max-width:min(720px,calc(100vw - 300px))}
@@ -32,20 +31,20 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 @media(max-width:700px){
   .hud{top:8px;left:8px;right:8px;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
   .hud::-webkit-scrollbar{display:none}.card{padding:7px 9px;flex:0 0 auto}.card:nth-child(3){display:none}.grow{display:none}
-  .controls{left:8px;right:8px;top:auto;bottom:78px;display:grid;grid-template-columns:1.35fr .9fr .9fr 1fr 1fr .95fr;gap:4px;padding:5px;border-radius:15px}
-  .controlGroup{display:contents}.controlDivider{display:none}.speedGroup{display:contents}
-  .controls .btn{min-width:0;padding:9px 4px;font-size:10px;box-shadow:none}.mainAction span{display:none}.toolBtn .label{font-size:10px}.toolBtn .icon{font-size:13px}.resetBtn{font-size:15px}
+  .controls{left:auto;right:8px;top:58px;bottom:auto;width:220px;grid-template-columns:1fr 1fr;gap:5px;padding:6px;border-radius:14px}
+  .controls .btn{min-width:0;padding:8px 4px;font-size:10px;box-shadow:none;min-height:36px}.mainAction span{display:inline;font-size:9px}.toolBtn .label{font-size:9px}.toolBtn .icon{font-size:13px}.resetBtn{font-size:15px}
   .bottom{left:8px;right:8px;bottom:8px;display:block}
   .build{max-width:none;width:100%;flex-wrap:nowrap;overflow-x:auto;padding:5px;scrollbar-width:none}
   .build::-webkit-scrollbar{display:none}.build button{flex:0 0 auto;padding:8px 10px;font-size:10px}
   .hint{display:none}
+  #statsPanel,#ordersPanel,#inventoryPanel{top:176px!important}
 }
 @media(min-width:701px){
-  .controls .btn:nth-child(1){min-width:46px}.controls .btn:nth-child(7){min-width:42px}
+  .controls .btn{min-width:0}
 }
 @media(max-width:430px){
-  .controls{grid-template-columns:1.15fr .8fr .8fr 1fr 1fr .8fr;bottom:82px}
-  .controls .btn{font-size:9px;padding:8px 2px}.toolBtn .label{font-size:9px}.toolBtn .icon{font-size:12px}.mainAction{font-size:10px}.resetBtn{font-size:14px}
+  .controls{right:6px;top:56px;width:190px;grid-template-columns:1fr 1fr;gap:4px;padding:5px}
+  .controls .btn{font-size:9px;padding:7px 2px;min-height:34px}.toolBtn .label{font-size:8px}.toolBtn .icon{font-size:12px}.mainAction{font-size:9px}.resetBtn{font-size:14px}
 }
 </style>
 </head>
@@ -60,19 +59,19 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 </div>
 <div class="controls" aria-label="Управление магазином">
 <div class="controlGroup">
-<button class="btn mainAction" id="pause" title="Открыть / поставить на паузу">▶ <span>Открыть</span></button>
+<button class="btn mainAction" id="pause" title="Открыть / поставить на паузу">▶️ <span>Открыть</span></button>
 <div class="speedGroup">
-<button class="btn active" id="speed1" title="Скорость ×1">×1</button>
-<button class="btn" id="speed3" title="Скорость ×3">×3</button>
+<button class="btn active" id="speed1" title="Скорость ×1">⏱️ ×1</button>
+<button class="btn" id="speed3" title="Скорость ×3">⚡ ×3</button>
 </div>
 </div>
 <div class="controlDivider"></div>
-<button class="btn toolBtn" id="inventory" title="Ассортимент и остатки"><span class="icon">📦</span><span class="label">Ассортимент</span></button>
-<button class="btn toolBtn" id="orders" title="Заказы поставщикам"><span class="icon">🚚</span><span class="label">Закупки</span></button>
+<button class="btn toolBtn" id="inventory" title="Товары и остатки"><span class="icon">🛒</span><span class="label">Товары</span></button>
+<button class="btn toolBtn" id="orders" title="Заказы поставщикам"><span class="icon">📦</span><span class="label">Закупки</span></button>
 <button class="btn toolBtn" id="stats" title="Статистика продаж"><span class="icon">📊</span><span class="label">Статистика</span></button>
-<button class="btn resetBtn" id="reset" title="Начать заново">↻</button>
+<button class="btn resetBtn" id="reset" title="Начать заново">🔄</button>
 </div>
-<div id="statsPanel" class="modalPanel" style="display:none;position:fixed;left:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">📊 Статистика магазина</div><button class="panelClose" data-close="statsPanel">×</button></div><div id="statsList"></div></div><div id="ordersPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">🚚 Закупки у поставщиков</div><button class="panelClose" data-close="ordersPanel">×</button></div><div id="orderList"></div></div><div id="inventoryPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
+<div id="statsPanel" class="modalPanel" style="display:none;position:fixed;left:16px;top:230px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">📊 Статистика магазина</div><button class="panelClose" data-close="statsPanel">×</button></div><div id="statsList"></div></div><div id="ordersPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:230px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div class="panelHead"><div style="font-weight:800;font-size:16px">🚚 Закупки у поставщиков</div><button class="panelClose" data-close="ordersPanel">×</button></div><div id="orderList"></div></div><div id="inventoryPanel" class="modalPanel" style="display:none;position:fixed;right:16px;top:230px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
 <div class="panelHead"><div style="font-weight:800;font-size:16px">📦 Ассортимент</div><button class="panelClose" data-close="inventoryPanel">×</button></div>
 <div id="productList"></div>
 </div>
