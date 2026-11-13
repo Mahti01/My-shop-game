@@ -7,16 +7,39 @@
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9ecee;font-family:Inter,Arial,sans-serif;color:#202428}
 body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
-.hud{position:fixed;top:14px;left:16px;right:16px;display:flex;gap:9px;z-index:10;pointer-events:none}
-.card,.panel{background:rgba(255,255,255,.94);border:1px solid #d9dddf;border-radius:14px;box-shadow:0 6px 24px rgba(30,40,45,.09);padding:9px 12px;font-size:12px;color:#6a7075;backdrop-filter:blur(8px)}
+.hud{position:fixed;top:12px;left:14px;right:14px;display:flex;align-items:center;gap:8px;z-index:10;pointer-events:none}
+.card,.panel{background:rgba(255,255,255,.94);border:1px solid #d9dddf;border-radius:14px;box-shadow:0 6px 24px rgba(30,40,45,.09);padding:9px 12px;font-size:12px;color:#6a7075;backdrop-filter:blur(10px)}
 .card b{font-size:14px;color:#202428}.grow{flex:1}
-.controls{position:fixed;right:16px;top:68px;display:flex;gap:7px;z-index:12}
-.btn{border:1px solid #d6dadd;background:#fff;border-radius:12px;padding:9px 12px;font-weight:700;color:#30353a;box-shadow:0 4px 16px rgba(30,40,45,.08)}
+.controls{position:fixed;right:14px;top:62px;display:flex;align-items:center;gap:6px;padding:6px;background:rgba(255,255,255,.86);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 8px 28px rgba(30,40,45,.12);backdrop-filter:blur(10px);z-index:12}
+.controls .btn{min-width:42px}
+.btn{border:1px solid #d6dadd;background:#fff;border-radius:11px;padding:9px 11px;font-weight:700;color:#30353a;box-shadow:0 3px 12px rgba(30,40,45,.06);white-space:nowrap}
 .btn.active{background:#252a2e;color:#fff;border-color:#252a2e}
-.bottom{position:fixed;left:16px;right:16px;bottom:15px;display:flex;gap:9px;z-index:12}
-.build{display:flex;gap:7px;flex-wrap:wrap}.build button{border:1px solid #d8dcde;background:#f5f6f6;border-radius:11px;padding:9px 11px;color:#2e3337;font-weight:600}
-.hint{margin-left:auto;max-width:430px;line-height:1.35}.toast{position:fixed;top:82px;left:50%;transform:translate(-50%,-10px);opacity:0;background:#24292d;color:#fff;padding:10px 15px;border-radius:12px;z-index:20;transition:.2s}.toast.on{opacity:1;transform:translate(-50%,0)}
-@media(max-width:700px){.hud{top:10px;left:10px;right:10px;gap:5px}.card{padding:7px 8px}.card:nth-child(3){display:none}.controls{right:10px;top:60px}.btn{padding:8px 9px}.bottom{left:10px;right:10px;bottom:10px}.hint{display:none}.build button{padding:8px 9px;font-size:11px}}
+.bottom{position:fixed;left:14px;right:14px;bottom:14px;display:flex;align-items:flex-end;gap:9px;z-index:12}
+.build{display:flex;gap:7px;flex-wrap:wrap;max-width:min(720px,calc(100vw - 300px))}
+.build button{border:1px solid #d8dcde;background:#f5f6f6;border-radius:11px;padding:9px 11px;color:#2e3337;font-weight:600;white-space:nowrap}
+.hint{margin-left:auto;max-width:430px;line-height:1.35}
+.toast{position:fixed;top:82px;left:50%;transform:translate(-50%,-10px);opacity:0;background:#24292d;color:#fff;padding:10px 15px;border-radius:12px;z-index:20;transition:.2s}.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:700px){
+  .hud{top:8px;left:8px;right:8px;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .hud::-webkit-scrollbar{display:none}.card{padding:7px 9px;flex:0 0 auto}.card:nth-child(3){display:none}.grow{display:none}
+  .controls{left:8px;right:8px;top:auto;bottom:78px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;padding:5px;border-radius:15px}
+  .controls .btn{min-width:0;padding:9px 4px;font-size:11px;box-shadow:none}
+  .bottom{left:8px;right:8px;bottom:8px;display:block}
+  .build{max-width:none;width:100%;flex-wrap:nowrap;overflow-x:auto;padding:5px;scrollbar-width:none}
+  .build::-webkit-scrollbar{display:none}.build button{flex:0 0 auto;padding:8px 10px;font-size:10px}
+  .hint{display:none}
+}
+@media(min-width:701px){
+  .controls .btn:nth-child(1){min-width:46px}.controls .btn:nth-child(7){min-width:42px}
+}
+@media(max-width:430px){
+  .controls{grid-template-columns:repeat(4,minmax(0,1fr));bottom:82px}
+  .controls .btn{font-size:10px;padding:8px 3px}
+  .controls .btn:nth-child(5),.controls .btn:nth-child(6),.controls .btn:nth-child(7){font-size:0}
+  .controls .btn:nth-child(5)::after{content:'Товары';font-size:10px}
+  .controls .btn:nth-child(6)::after{content:'Заказы';font-size:10px}
+  .controls .btn:nth-child(7)::after{content:'Сброс';font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -28,8 +51,14 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <div class="card">📦 <b id="stock">30</b></div>
 <div class="grow"></div><div class="card">День <b id="day">1</b> · <b id="clock">08:00</b></div>
 </div>
-<div class="controls">
-<button class="btn" id="pause">▶</button><button class="btn active" id="speed1">×1</button><button class="btn" id="speed3">×3</button><button class="btn" id="inventory">📦 Товары</button><button class="btn" id="orders">🚚 Закупки</button><button class="btn" id="stats">📊 Статистика</button><button class="btn" id="reset">↻</button>
+<div class="controls" aria-label="Управление магазином">
+<button class="btn" id="pause" title="Открыть / поставить на паузу">▶</button>
+<button class="btn active" id="speed1" title="Скорость ×1">×1</button>
+<button class="btn" id="speed3" title="Скорость ×3">×3</button>
+<button class="btn" id="inventory" title="Ассортимент и остатки">📦 Товары</button>
+<button class="btn" id="orders" title="Заказы поставщикам">🚚 Закупки</button>
+<button class="btn" id="stats" title="Статистика продаж">📊 Статистика</button>
+<button class="btn" id="reset" title="Начать заново">↻</button>
 </div>
 <div id="statsPanel" style="display:none;position:fixed;left:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div style="font-weight:800;font-size:16px;margin-bottom:10px">📊 Статистика магазина</div><div id="statsList"></div></div><div id="ordersPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div style="font-weight:800;font-size:16px;margin-bottom:6px">🚚 Закупки у поставщиков</div><div id="orderList"></div></div><div id="inventoryPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
 <div style="font-weight:800;font-size:16px;margin-bottom:10px">Ассортимент</div>
