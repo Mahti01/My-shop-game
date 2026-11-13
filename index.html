@@ -49,9 +49,10 @@ function resize(){W=innerWidth;H=innerHeight;canvas.width=W*D;canvas.height=H*D;
 const S={money:100000,profit:0,day:1,h:8,min:0,running:false,speed:1,zoom:.92,cx:0,cy:42,stock:30};
 const shop={w:11,h:8};
 const objects=[
-{x:-4,y:-2,k:'s'},{x:0,y:-2,k:'s'},{x:4,y:-2,k:'s'},
-{x:-4,y:2,k:'s'},{x:0,y:2,k:'s'},{x:4,y:2,k:'s'},
-{x:3.4,y:3.1,k:'cash'},{x:-4.7,y:3.0,k:'decor'},{x:4.8,y:-3.1,k:'decor'}
+{x:-4.2,y:-2.2,k:'s',cat:'МОЛОЧНОЕ'},{x:0,y:-2.2,k:'s',cat:'НАПИТКИ'},{x:4.2,y:-2.2,k:'s',cat:'СЛАДОСТИ'},
+{x:-4.2,y:1.7,k:'s',cat:'ОВОЩИ'},{x:0,y:1.7,k:'s',cat:'БАКАЛЕЯ'},{x:4.2,y:1.7,k:'s',cat:'КРАСОТА'},
+{x:3.5,y:3.15,k:'cash'},{x:-4.8,y:3.0,k:'decor'},{x:4.8,y:-3.1,k:'decor'},
+{x:-5.0,y:-.2,k:'cooler'},{x:5.0,y:-.2,k:'cooler'}
 ];
 const people=[];
 
@@ -67,9 +68,9 @@ const A=iso(-7,-5),B=iso(7,-5),C=iso(7,5),E=iso(-7,5);
 poly([A,B,C,E],'#e5e8e8','#c9cdcf');
 for(let i=-7;i<=7;i++){line(iso(i,-5),iso(i,5),'rgba(145,151,155,.20)');}
 for(let i=-5;i<=5;i++){line(iso(-7,i),iso(7,i),'rgba(145,151,155,.20)');}
-drawParking();drawShop();drawRoadDetails();drawTruck();
+drawParking();drawShop();drawRoadDetails();drawCheckoutArea();drawTruck();
 objects.sort((a,b)=>a.y-b.y);
-for(const o of objects){if(o.k==='s')drawShelf(o);else if(o.k==='cash')drawCash(o);else drawDecor(o)}
+for(const o of objects){if(o.k==='s')drawShelf(o);else if(o.k==='cash')drawCash(o);else if(o.k==='cooler')drawCooler(o);else drawDecor(o)}
 drawPeople();drawSign();
 }
 function drawParking(){
@@ -105,13 +106,22 @@ poly([{x:p.x,y:p.y-15*z},{x:p.x,y:p.y-51*z},{x:p.x+w/2,y:p.y-36*z},{x:p.x+w/2,y:
 for(let i=0;i<3;i++){
 const yy=p.y-(11+i*10)*z;diamond({x:p.x,y:yy},w*.82,10*z,'#fafafa','#c8ccce');
 for(let j=0;j<5;j++){ctx.fillStyle=['#d55d52','#e4a23b','#6d8fd2','#74a76e','#c67b9c'][j];ctx.beginPath();ctx.arc(p.x+(j-2)*8*z,yy-2*z,3*z,0,Math.PI*2);ctx.fill()}
-}}
+}
+if(o.cat){ctx.fillStyle='#596168';ctx.font='700 '+Math.max(6,7*z)+'px Arial';ctx.textAlign='center';ctx.fillText(o.cat,p.x,p.y-56*z)}
+}
 function drawCash(o){
 const p=iso(o.x,o.y),z=S.zoom;
 diamond({x:p.x,y:p.y+5*z},65*z,27*z,'rgba(0,0,0,.08)');
 poly([{x:p.x-24*z,y:p.y},{x:p.x-24*z,y:p.y-20*z},{x:p.x,y:p.y-30*z},{x:p.x,y:p.y-10*z}],'#d6d6d6','#a7aaac');
 poly([{x:p.x,y:p.y-10*z},{x:p.x,y:p.y-30*z},{x:p.x+24*z,y:p.y-20*z},{x:p.x+24*z,y:p.y}],'#f5f5f5','#a7aaac');
 diamond({x:p.x,y:p.y-24*z},20*z,8*z,'#272c30');
+}
+function drawCooler(o){
+const p=iso(o.x,o.y),z=S.zoom,w=58*z;
+diamond({x:p.x,y:p.y+6*z},w+8*z,22*z,'rgba(0,0,0,.08)');
+poly([{x:p.x-w/2,y:p.y},{x:p.x-w/2,y:p.y-42*z},{x:p.x,y:p.y-56*z},{x:p.x,y:p.y-14*z}],'#d9e5e8','#9eafb5');
+poly([{x:p.x,y:p.y-14*z},{x:p.x,y:p.y-56*z},{x:p.x+w/2,y:p.y-42*z},{x:p.x+w/2,y:p.y}],'#edf5f6','#9eafb5');
+for(let i=0;i<3;i++){let yy=p.y-(19+i*10)*z;diamond({x:p.x,y:yy},w*.72,8*z,'#bcd9df','#9eafb5')}
 }
 function drawDecor(o){
 const p=iso(o.x,o.y),z=S.zoom;ctx.fillStyle='#6d8b59';ctx.fillRect(p.x-2,p.y-20*z,4,20*z);diamond({x:p.x,y:p.y-24*z},28*z,19*z,'#92c84b','#719b3c');
@@ -125,6 +135,10 @@ ctx.fillStyle=q.skin;ctx.beginPath();ctx.arc(p.x,p.y-14*z,5.5*z,0,Math.PI*2);ctx
 ctx.fillStyle=q.hair;ctx.beginPath();ctx.arc(p.x,p.y-16*z,5*z,Math.PI,Math.PI*2);ctx.fill();
 if(q.state===1){ctx.fillStyle='#fff';ctx.font='bold '+(8*z)+'px Arial';ctx.textAlign='center';ctx.fillText('₽',p.x,p.y-25*z)}
 }}
+function drawCheckoutArea(){
+const p=iso(3.3,3.85);diamond(p,105*S.zoom,42*S.zoom,'rgba(215,194,150,.32)');
+ctx.fillStyle='#7d6a4e';ctx.font='700 '+Math.max(8,9*S.zoom)+'px Arial';ctx.textAlign='center';ctx.fillText('КАССА',p.x,p.y+2*S.zoom)
+}
 function spawnCustomer(){
 const entrance=Math.random()>.5?[-5.8,4.8]:[5.8,4.8];
 people.push({x:entrance[0],y:entrance[1],tx:(Math.random()*8-4),ty:(Math.random()*5-2.2),state:0,wait:.8+Math.random()*1.5,
