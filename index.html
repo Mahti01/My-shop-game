@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Мой Магазин — 0.2</title>
+<title>Мой Магазин — 0.4</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9ecee;font-family:Inter,Arial,sans-serif;color:#202428}
 body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
@@ -38,7 +38,7 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <button data-build="decor">＋ Декор · 800 ₽</button>
 <button data-build="stock">📦 Закупить · 3 000 ₽</button>
 </div>
-<div class="panel hint">Перетаскивай карту пальцем или мышью. Колесо / pinch — масштаб. Нажми ▶, чтобы открыть магазин.</div>
+<div class="panel hint">Покупатели теперь идут к конкретной категории, покупают товар и уходят. 📦 «Закупить» пополняет все категории. Камера: drag / колесо / pinch.</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -46,7 +46,8 @@ const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 let W=innerWidth,H=innerHeight,D=Math.min(devicePixelRatio||1,2);
 function resize(){W=innerWidth;H=innerHeight;canvas.width=W*D;canvas.height=H*D;ctx.setTransform(D,0,0,D,0,0)}addEventListener('resize',resize);resize();
 
-const S={money:100000,profit:0,day:1,h:8,min:0,running:false,speed:1,zoom:.92,cx:0,cy:42,stock:30};
+const S={money:100000,profit:0,day:1,h:8,min:0,running:false,speed:1,zoom:.92,cx:0,cy:42,
+stock:{'МОЛОЧНОЕ':5,'НАПИТКИ':5,'СЛАДОСТИ':5,'ОВОЩИ':5,'БАКАЛЕЯ':5,'КРАСОТА':5}};
 const shop={w:11,h:8};
 const objects=[
 {x:-4.2,y:-2.2,k:'s',cat:'МОЛОЧНОЕ'},{x:0,y:-2.2,k:'s',cat:'НАПИТКИ'},{x:4.2,y:-2.2,k:'s',cat:'СЛАДОСТИ'},
@@ -54,6 +55,19 @@ const objects=[
 {x:3.5,y:3.15,k:'cash'},{x:-4.8,y:3.0,k:'decor'},{x:4.8,y:-3.1,k:'decor'},
 {x:-5.0,y:-.2,k:'cooler'},{x:5.0,y:-.2,k:'cooler'}
 ];
+const PRODUCTS={
+'МОЛОЧНОЕ':{price:190,cost:105,color:'#f4e7c1'},
+'НАПИТКИ':{price:240,cost:130,color:'#8eb7d9'},
+'СЛАДОСТИ':{price:280,cost:150,color:'#d99aaf'},
+'ОВОЩИ':{price:170,cost:90,color:'#8bb36d'},
+'БАКАЛЕЯ':{price:320,cost:180,color:'#c89b62'},
+'КРАСОТА':{price:520,cost:290,color:'#b58ac5'}
+};
+function totalStock(){return Object.values(S.stock).reduce((a,b)=>a+b,0)}
+function randomCategory(){
+const keys=Object.keys(S.stock).filter(k=>S.stock[k]>0);
+return keys.length?keys[Math.floor(Math.random()*keys.length)]:null;
+}
 const people=[];
 
 function money(v){return Math.round(v).toLocaleString('ru-RU')+' ₽'}
@@ -105,9 +119,14 @@ poly([{x:p.x-w/2,y:p.y},{x:p.x-w/2,y:p.y-36*z},{x:p.x,y:p.y-51*z},{x:p.x,y:p.y-1
 poly([{x:p.x,y:p.y-15*z},{x:p.x,y:p.y-51*z},{x:p.x+w/2,y:p.y-36*z},{x:p.x+w/2,y:p.y}],'#f1f2f2','#a7adb0');
 for(let i=0;i<3;i++){
 const yy=p.y-(11+i*10)*z;diamond({x:p.x,y:yy},w*.82,10*z,'#fafafa','#c8ccce');
-for(let j=0;j<5;j++){ctx.fillStyle=['#d55d52','#e4a23b','#6d8fd2','#74a76e','#c67b9c'][j];ctx.beginPath();ctx.arc(p.x+(j-2)*8*z,yy-2*z,3*z,0,Math.PI*2);ctx.fill()}
+for(let j=0;j<5;j++){ctx.fillStyle=PRODUCTS[o.cat]?.color||['#d55d52','#e4a23b','#6d8fd2','#74a76e','#c67b9c'][j];ctx.beginPath();ctx.arc(p.x+(j-2)*8*z,yy-2*z,3*z,0,Math.PI*2);ctx.fill()}
 }
-if(o.cat){ctx.fillStyle='#596168';ctx.font='700 '+Math.max(6,7*z)+'px Arial';ctx.textAlign='center';ctx.fillText(o.cat,p.x,p.y-56*z)}
+if(o.cat){
+ctx.fillStyle='#596168';ctx.font='700 '+Math.max(6,7*z)+'px Arial';ctx.textAlign='center';
+ctx.fillText(o.cat,p.x,p.y-56*z);
+ctx.fillStyle='#ffffff';ctx.font='700 '+Math.max(7,9*z)+'px Arial';
+ctx.fillText('×'+(S.stock[o.cat]||0),p.x,p.y-45*z);
+}
 }
 function drawCash(o){
 const p=iso(o.x,o.y),z=S.zoom;
@@ -140,8 +159,12 @@ const p=iso(3.3,3.85);diamond(p,105*S.zoom,42*S.zoom,'rgba(215,194,150,.32)');
 ctx.fillStyle='#7d6a4e';ctx.font='700 '+Math.max(8,9*S.zoom)+'px Arial';ctx.textAlign='center';ctx.fillText('КАССА',p.x,p.y+2*S.zoom)
 }
 function spawnCustomer(){
+const cat=randomCategory();
+if(!cat)return;
+const shelf=objects.find(o=>o.k==='s'&&o.cat===cat);
 const entrance=Math.random()>.5?[-5.8,4.8]:[5.8,4.8];
-people.push({x:entrance[0],y:entrance[1],tx:(Math.random()*8-4),ty:(Math.random()*5-2.2),state:0,wait:.8+Math.random()*1.5,
+people.push({x:entrance[0],y:entrance[1],tx:shelf?shelf.x:0,ty:shelf?shelf.y:0,targetCat:cat,state:0,
+wait:.8+Math.random()*1.5,
 clothes:['#df806e','#789fd0','#d1a54f','#70a778','#ad82c9','#e58baf'][Math.floor(Math.random()*6)],
 skin:['#efc3a6','#d99f7e','#b97855'][Math.floor(Math.random()*3)],hair:'#2b2928'})
 }
@@ -156,13 +179,23 @@ const q=people[i],dx=q.tx-q.x,dy=q.ty-q.y,dist=Math.hypot(dx,dy);
 if(q.state===0&&dist>.12){q.x+=dx/dist*dt*.82*S.speed;q.y+=dy/dist*dt*.82*S.speed}
 else if(q.state===0)q.state=1;
 else if(q.state===1){q.wait-=dt*S.speed;if(q.wait<=0){
-if(S.stock>0&&Math.random()<.82){S.stock--;const revenue=220+Math.random()*580;const margin=revenue*.42;S.money+=margin;S.profit+=margin}
+const cat=q.targetCat, p=PRODUCTS[cat];
+if(cat&&S.stock[cat]>0){
+S.stock[cat]--;
+const revenue=p.price;
+const margin=p.price-p.cost;
+S.money+=margin;S.profit+=margin;
+q.bought=true;
+toast('Продажа: '+cat+' +'+money(margin));
+}else{
+q.bought=false;
+}
 q.state=2;q.tx=5.8;q.ty=4.8;
 }}
 else if(q.state===2&&Math.hypot(q.tx-q.x,q.ty-q.y)<.16)people.splice(i,1);
 }}
 function updateUI(){
-moneyEl.textContent=money(S.money);profitEl.textContent=money(S.profit);customersEl.textContent=people.length;stockEl.textContent=S.stock;
+moneyEl.textContent=money(S.money);profitEl.textContent=money(S.profit);customersEl.textContent=people.length;stockEl.textContent=totalStock();
 clockEl.textContent=String(S.h).padStart(2,'0')+':'+String(Math.floor(S.min)).padStart(2,'0');dayEl.textContent=S.day;
 }
 function drawSign(){const p=iso(0,-4.18,2.25);ctx.fillStyle='#22272b';ctx.font='800 '+Math.max(15,19*S.zoom)+'px Arial';ctx.textAlign='center';ctx.fillText('МОЙ МАГАЗИН',p.x,p.y)}
@@ -177,7 +210,12 @@ document.getElementById('reset').onclick=()=>location.reload();
 document.querySelectorAll('[data-build]').forEach(btn=>btn.onclick=()=>{
 const kind=btn.dataset.build,cost=kind==='shelf'?2000:kind==='cash'?6000:kind==='decor'?800:3000;
 if(S.money<cost){toast('Недостаточно денег');return}S.money-=cost;
-if(kind==='stock'){S.stock+=30;toast('+30 единиц товара');return}
+if(kind==='stock'){
+const total=Object.keys(S.stock).reduce((sum,k)=>sum+S.stock[k],0);
+if(total>=60){toast('Склад заполнен');S.money+=cost;return}
+for(const k of Object.keys(S.stock))S.stock[k]+=5;
+toast('+5 каждой категории');
+return}
 objects.push({x:Math.round(Math.random()*8-4),y:Math.round(Math.random()*5-2.5),k:kind==='shelf'?'s':kind==='cash'?'cash':'decor'});
 toast('Объект установлен');
 });
@@ -185,7 +223,12 @@ toast('Объект установлен');
 let drag=false,lastX=0,lastY=0;
 canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;S.cx+=e.clientX-lastX;S.cy+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY});
-canvas.addEventListener('pointerup',()=>drag=false);
+canvas.addEventListener('pointerup',e=>{
+drag=false;
+if(Math.abs(e.clientX-lastX)<4&&Math.abs(e.clientY-lastY)<4){
+  const q=(e.clientX-W/2-S.cx)/(52*S.zoom*.72);
+}
+});
 canvas.addEventListener('pointercancel',()=>drag=false);
 canvas.addEventListener('wheel',e=>{e.preventDefault();S.zoom=Math.max(.55,Math.min(1.5,S.zoom*(e.deltaY<0?1.08:.93)))},{passive:false});
 
