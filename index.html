@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Мой Магазин — 0.6</title>
+<title>Мой Магазин — 0.7</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9ecee;font-family:Inter,Arial,sans-serif;color:#202428}
 body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
@@ -29,9 +29,9 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <div class="grow"></div><div class="card">День <b id="day">1</b> · <b id="clock">08:00</b></div>
 </div>
 <div class="controls">
-<button class="btn" id="pause">▶</button><button class="btn active" id="speed1">×1</button><button class="btn" id="speed3">×3</button><button class="btn" id="inventory">📦 Товары</button><button class="btn" id="reset">↻</button>
+<button class="btn" id="pause">▶</button><button class="btn active" id="speed1">×1</button><button class="btn" id="speed3">×3</button><button class="btn" id="inventory">📦 Товары</button><button class="btn" id="orders">🚚 Закупки</button><button class="btn" id="reset">↻</button>
 </div>
-<div id="inventoryPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
+<div id="ordersPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(430px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:16;padding:14px"><div style="font-weight:800;font-size:16px;margin-bottom:6px">🚚 Закупки у поставщиков</div><div id="orderList"></div></div><div id="inventoryPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
 <div style="font-weight:800;font-size:16px;margin-bottom:10px">Ассортимент</div>
 <div id="productList"></div>
 </div>
@@ -40,9 +40,9 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <button data-build="shelf">＋ Стеллаж · 2 000 ₽</button>
 <button data-build="cash">＋ Касса · 6 000 ₽</button>
 <button data-build="decor">＋ Декор · 800 ₽</button>
-<button data-build="stock">📦 Закупить · 3 000 ₽</button>
+<button data-build="stock">📦 Закупки</button>
 </div>
-<div class="panel hint">Покупатели теперь идут к конкретной категории, покупают товар и уходят. 📦 «Закупить» пополняет все категории. Покупатели выбирают конкретные товары, спрос разный, на кассе появляется очередь. Камера: drag / колесо / pinch.</div>
+<div class="panel hint">Покупатели идут за конкретным товаром. 🚚 Закажите нужный товар у поставщика — поставка придёт через несколько игровых минут. Камера: drag / колесо / pinch.</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -197,7 +197,7 @@ wait:.8+Math.random()*1.5,checkoutWait:0,
 clothes:['#df806e','#789fd0','#d1a54f','#70a778','#ad82c9','#e58baf'][Math.floor(Math.random()*6)],
 skin:['#efc3a6','#d99f7e','#b97855'][Math.floor(Math.random()*3)],hair:'#2b2928'})
 }
-function simulate(dt){
+function simulate(dt){for(let i=pendingOrders.length-1;i>=0;i--){pendingOrders[i].remaining-=dt*S.speed;if(pendingOrders[i].remaining<=0){const o=pendingOrders[i];const key=o.cat+'|'+o.product.name;productStock[key]=(productStock[key]||0)+o.qty;S.stock[o.cat]+=o.qty;pendingOrders.splice(i,1);renderProducts();renderOrders();toast('📦 Поставка пришла: '+o.product.name+' ×'+o.qty)}}
 if(!S.running)return;
 S.min+=dt*3*S.speed;
 if(S.min>=60){S.min-=60;S.h++}
@@ -239,8 +239,8 @@ function drawSign(){const p=iso(0,-4.18,2.25);ctx.fillStyle='#22272b';ctx.font='
 function toast(v){const e=document.getElementById('toast');e.textContent=v;e.classList.add('on');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>e.classList.remove('on'),1700)}
 const moneyEl=document.getElementById('money'),profitEl=document.getElementById('profit'),customersEl=document.getElementById('customers'),stockEl=document.getElementById('stock'),clockEl=document.getElementById('clock'),dayEl=document.getElementById('day');
 const inventoryPanel=document.getElementById('inventoryPanel'),productList=document.getElementById('productList');
-const productStock={}; Object.keys(PRODUCTS).forEach(cat=>PRODUCTS[cat].forEach(p=>productStock[cat+'|'+p.name]=S.stock[cat]));
-function renderProducts(){
+const productStock={}; Object.keys(PRODUCTS).forEach(cat=>PRODUCTS[cat].forEach((p,i)=>productStock[cat+'|'+p.name]=i===0?2:i===1?2:1)); const pendingOrders=[]; const SUPPLIERS=['ФрешМаркет','ОптСнаб','Городской склад']; let orderQty=5;
+function renderOrders(){const el=document.getElementById('orderList');const pending=pendingOrders.map(o=>'<div style="padding:9px 0;border-top:1px solid #eef0f1"><b>🚚 '+o.product.name+' ×'+o.qty+'</b><div style="font-size:11px;color:#7b8287">'+o.supplier+' · прибытие через '+Math.max(0,Math.ceil(o.remaining))+' мин.</div></div>').join('');const rows=Object.keys(PRODUCTS).map(cat=>'<div style="margin:12px 0 5px;font-weight:800;color:#596168">'+cat+'</div>'+PRODUCTS[cat].map(p=>{const k=cat+'|'+p.name;return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eef0f1"><div><b>'+p.name+'</b><div style="font-size:11px;color:#7b8287">'+money(p.cost)+' закупка · '+money(p.price)+' продажа · остаток ×'+(productStock[k]||0)+'</div></div><button class="btn orderBtn" data-cat="'+cat+'" data-product="'+p.name+'" style="padding:6px 9px">+'+orderQty+'</button></div>'}).join('')).join('');el.innerHTML='<div style="font-size:12px;color:#6a7075;margin-bottom:8px">Количество: <button class="btn qtyBtn" data-q="1">1</button> <button class="btn qtyBtn" data-q="5">5</button> <button class="btn qtyBtn" data-q="10">10</button></div>'+pending+rows;el.querySelectorAll('.qtyBtn').forEach(b=>b.onclick=()=>{orderQty=Number(b.dataset.q);renderOrders()});el.querySelectorAll('.orderBtn').forEach(b=>b.onclick=()=>placeOrder(b.dataset.cat,b.dataset.product));}function placeOrder(cat,name){const p=(PRODUCTS[cat]||[]).find(x=>x.name===name);if(!p)return;const total=p.cost*orderQty;if(S.money<total){toast('Недостаточно денег на закупку');return;}S.money-=total;pendingOrders.push({cat,product:p,qty:orderQty,supplier:SUPPLIERS[Math.floor(Math.random()*SUPPLIERS.length)],remaining:3+Math.random()*4});renderOrders();toast('Заказ оформлен: '+p.name+' ×'+orderQty);}function renderProducts(){
  productList.innerHTML=Object.keys(PRODUCTS).map(cat=>'<div style="margin:10px 0 5px;font-weight:800;color:#596168">'+cat+'</div>'+
  PRODUCTS[cat].map(p=>{const k=cat+'|'+p.name;return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eef0f1"><div><b>'+p.name+'</b><div style="font-size:11px;color:#7b8287">Закупка '+money(p.cost)+' · Продажа '+money(p.price)+'</div></div><div style="font-weight:800">×'+(productStock[k]||0)+'</div></div>'}).join('')).join('');
 }
@@ -250,7 +250,7 @@ renderProducts();
 document.getElementById('pause').onclick=()=>{S.running=!S.running;document.getElementById('pause').textContent=S.running?'Ⅱ':'▶';toast(S.running?'Магазин открыт':'Пауза')};
 document.getElementById('speed1').onclick=()=>{S.speed=1;S.running=true;document.getElementById('speed1').classList.add('active');document.getElementById('speed3').classList.remove('active')};
 document.getElementById('speed3').onclick=()=>{S.speed=3;S.running=true;document.getElementById('speed3').classList.add('active');document.getElementById('speed1').classList.remove('active')};
-document.getElementById('inventory').onclick=()=>{inventoryPanel.style.display=inventoryPanel.style.display==='none'?'block':'none';renderProducts()};
+document.getElementById('inventory').onclick=()=>{inventoryPanel.style.display=inventoryPanel.style.display==='none'?'block':'none';renderProducts()}; const ordersPanel=document.getElementById('ordersPanel'); document.getElementById('orders').onclick=()=>{ordersPanel.style.display=ordersPanel.style.display==='none'?'block':'none';renderOrders()}; renderOrders();
 document.getElementById('reset').onclick=()=>location.reload();
 
 document.querySelectorAll('[data-build]').forEach(btn=>btn.onclick=()=>{
