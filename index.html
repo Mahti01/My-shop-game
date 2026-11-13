@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Мой Магазин — 0.5</title>
+<title>Мой Магазин — 0.6</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9ecee;font-family:Inter,Arial,sans-serif;color:#202428}
 body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
@@ -29,7 +29,11 @@ body{touch-action:none}canvas{display:block;width:100vw;height:100vh}
 <div class="grow"></div><div class="card">День <b id="day">1</b> · <b id="clock">08:00</b></div>
 </div>
 <div class="controls">
-<button class="btn" id="pause">▶</button><button class="btn active" id="speed1">×1</button><button class="btn" id="speed3">×3</button><button class="btn" id="reset">↻</button>
+<button class="btn" id="pause">▶</button><button class="btn active" id="speed1">×1</button><button class="btn" id="speed3">×3</button><button class="btn" id="inventory">📦 Товары</button><button class="btn" id="reset">↻</button>
+</div>
+<div id="inventoryPanel" style="display:none;position:fixed;right:16px;top:112px;width:min(390px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:rgba(255,255,255,.97);border:1px solid #d9dddf;border-radius:16px;box-shadow:0 12px 40px rgba(30,40,45,.16);z-index:15;padding:14px">
+<div style="font-weight:800;font-size:16px;margin-bottom:10px">Ассортимент</div>
+<div id="productList"></div>
 </div>
 <div class="bottom">
 <div class="panel build">
@@ -207,7 +211,7 @@ else if(q.state===0)q.state=1;
 else if(q.state===1){q.wait-=dt*S.speed;if(q.wait<=0){
 const cat=q.targetCat, p=q.targetProduct;
 if(cat&&S.stock[cat]>0){
-S.stock[cat]--;q.bought=true;q.state=2;q.tx=3.5;q.ty=3.15;
+const key=cat+'|'+q.targetProduct.name; if((productStock[key]||0)<=0){q.bought=false;q.state=4;q.tx=5.8;q.ty=4.8;continue;} productStock[key]--; S.stock[cat]--; renderProducts(); q.bought=true;q.state=2;q.tx=3.5;q.ty=3.15;
 }else{
 q.bought=false;q.state=4;q.tx=5.8;q.ty=4.8;
 }
@@ -234,10 +238,19 @@ clockEl.textContent=String(S.h).padStart(2,'0')+':'+String(Math.floor(S.min)).pa
 function drawSign(){const p=iso(0,-4.18,2.25);ctx.fillStyle='#22272b';ctx.font='800 '+Math.max(15,19*S.zoom)+'px Arial';ctx.textAlign='center';ctx.fillText('МОЙ МАГАЗИН',p.x,p.y)}
 function toast(v){const e=document.getElementById('toast');e.textContent=v;e.classList.add('on');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>e.classList.remove('on'),1700)}
 const moneyEl=document.getElementById('money'),profitEl=document.getElementById('profit'),customersEl=document.getElementById('customers'),stockEl=document.getElementById('stock'),clockEl=document.getElementById('clock'),dayEl=document.getElementById('day');
+const inventoryPanel=document.getElementById('inventoryPanel'),productList=document.getElementById('productList');
+const productStock={}; Object.keys(PRODUCTS).forEach(cat=>PRODUCTS[cat].forEach(p=>productStock[cat+'|'+p.name]=S.stock[cat]));
+function renderProducts(){
+ productList.innerHTML=Object.keys(PRODUCTS).map(cat=>'<div style="margin:10px 0 5px;font-weight:800;color:#596168">'+cat+'</div>'+
+ PRODUCTS[cat].map(p=>{const k=cat+'|'+p.name;return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eef0f1"><div><b>'+p.name+'</b><div style="font-size:11px;color:#7b8287">Закупка '+money(p.cost)+' · Продажа '+money(p.price)+'</div></div><div style="font-weight:800">×'+(productStock[k]||0)+'</div></div>'}).join('')).join('');
+}
+renderProducts();
+
 
 document.getElementById('pause').onclick=()=>{S.running=!S.running;document.getElementById('pause').textContent=S.running?'Ⅱ':'▶';toast(S.running?'Магазин открыт':'Пауза')};
 document.getElementById('speed1').onclick=()=>{S.speed=1;S.running=true;document.getElementById('speed1').classList.add('active');document.getElementById('speed3').classList.remove('active')};
 document.getElementById('speed3').onclick=()=>{S.speed=3;S.running=true;document.getElementById('speed3').classList.add('active');document.getElementById('speed1').classList.remove('active')};
+document.getElementById('inventory').onclick=()=>{inventoryPanel.style.display=inventoryPanel.style.display==='none'?'block':'none';renderProducts()};
 document.getElementById('reset').onclick=()=>location.reload();
 
 document.querySelectorAll('[data-build]').forEach(btn=>btn.onclick=()=>{
@@ -246,7 +259,7 @@ if(S.money<cost){toast('Недостаточно денег');return}S.money-=co
 if(kind==='stock'){
 const total=Object.keys(S.stock).reduce((sum,k)=>sum+S.stock[k],0);
 if(total>=60){toast('Склад заполнен');S.money+=cost;return}
-for(const k of Object.keys(S.stock))S.stock[k]+=5;
+for(const k of Object.keys(S.stock)){S.stock[k]+=5; PRODUCTS[k].forEach(p=>productStock[k+'|'+p.name]=(productStock[k+'|'+p.name]||0)+5)} renderProducts();
 toast('+5 каждой категории');
 return}
 objects.push({x:Math.round(Math.random()*8-4),y:Math.round(Math.random()*5-2.5),k:kind==='shelf'?'s':kind==='cash'?'cash':'decor'});
