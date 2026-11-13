@@ -256,12 +256,7 @@ document.getElementById('reset').onclick=()=>location.reload();
 document.querySelectorAll('[data-build]').forEach(btn=>btn.onclick=()=>{
 const kind=btn.dataset.build,cost=kind==='shelf'?2000:kind==='cash'?6000:kind==='decor'?800:3000;
 if(S.money<cost){toast('Недостаточно денег');return}S.money-=cost;
-if(kind==='stock'){
-const total=Object.keys(S.stock).reduce((sum,k)=>sum+S.stock[k],0);
-if(total>=60){toast('Склад заполнен');S.money+=cost;return}
-for(const k of Object.keys(S.stock)){S.stock[k]+=5; PRODUCTS[k].forEach(p=>productStock[k+'|'+p.name]=(productStock[k+'|'+p.name]||0)+5)} renderProducts();
-toast('+5 каждой категории');
-return}
+if(kind==='stock'){S.money+=cost;document.getElementById('orders').click();return}
 objects.push({x:Math.round(Math.random()*8-4),y:Math.round(Math.random()*5-2.5),k:kind==='shelf'?'s':kind==='cash'?'cash':'decor'});
 toast('Объект установлен');
 });
